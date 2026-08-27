@@ -1,0 +1,11 @@
+.git
+.gitignore
+.env
+.env.*
+data
+__pycache__
+*.py[cod]
+*.log
+*.bak*
+backups
+deploy

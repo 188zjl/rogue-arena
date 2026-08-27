@@ -1,0 +1,1012 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>几何围猎 · 账号管理</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #10221c;
+            --muted: #587067;
+            --paper: #edf8f1;
+            --card: rgba(252, 255, 253, .88);
+            --jade: #2b8a62;
+            --jade-dark: #176144;
+            --mint: #8ee0b7;
+            --amber: #e8a83e;
+            --danger: #b54343;
+            --line: rgba(31, 91, 67, .16);
+            --shadow: 0 22px 60px rgba(32, 79, 60, .12);
+        }
+
+        * { box-sizing: border-box; }
+        html { min-height: 100%; }
+        body {
+            min-height: 100%;
+            margin: 0;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 0 0, rgba(142, 224, 183, .38), transparent 28rem),
+                linear-gradient(rgba(43, 138, 98, .055) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(43, 138, 98, .055) 1px, transparent 1px),
+                var(--paper);
+            background-size: auto, 40px 40px, 40px 40px, auto;
+            font-family: "Segoe UI Variable", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+        }
+
+        button, input { font: inherit; }
+        button:focus-visible, input:focus-visible { outline: 3px solid var(--amber); outline-offset: 2px; }
+
+        .topbar {
+            position: sticky;
+            top: 0;
+            z-index: 5;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            min-height: 72px;
+            padding: 14px clamp(20px, 5vw, 72px);
+            background: rgba(237, 248, 241, .82);
+            border-bottom: 1px solid var(--line);
+            backdrop-filter: blur(18px);
+        }
+
+        .brand { display: flex; align-items: center; gap: 12px; font-weight: 900; }
+        .brand-mark {
+            width: 34px;
+            aspect-ratio: 1;
+            display: grid;
+            place-items: center;
+            color: white;
+            background: var(--jade-dark);
+            clip-path: polygon(50% 0, 95% 35%, 78% 92%, 22% 92%, 5% 35%);
+        }
+
+        .top-actions { display: flex; gap: 10px; }
+        .link-button, .ghost-button, .solid-button, .danger-button {
+            min-height: 40px;
+            padding: 10px 15px;
+            border-radius: 12px;
+            border: 1px solid var(--line);
+            cursor: pointer;
+            font-weight: 800;
+            transition: transform .18s, background .18s, border-color .18s;
+        }
+        .link-button { color: var(--jade-dark); background: white; text-decoration: none; }
+        .ghost-button { color: var(--ink); background: rgba(255,255,255,.62); }
+        .solid-button { color: white; background: var(--jade-dark); border-color: var(--jade-dark); }
+        .danger-button { color: var(--danger); background: #fff7f7; border-color: rgba(181,67,67,.24); }
+        .link-button:hover, .ghost-button:hover, .solid-button:hover, .danger-button:hover { transform: translateY(-1px); }
+        .solid-button:hover { background: var(--jade); }
+        button:disabled { cursor: not-allowed; opacity: .5; transform: none; }
+
+        main { width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 54px 0 80px; }
+        .hero { display: flex; justify-content: space-between; align-items: end; gap: 28px; margin-bottom: 34px; }
+        .eyebrow { margin: 0 0 10px; color: var(--jade-dark); font: 800 12px/1.4 "Consolas", monospace; letter-spacing: .17em; }
+        h1 { margin: 0; font-size: clamp(36px, 5vw, 66px); letter-spacing: -.06em; }
+        .hero p:last-child { max-width: 590px; margin: 12px 0 0; color: var(--muted); line-height: 1.7; }
+        .admin-chip { flex: 0 0 auto; padding: 10px 14px; color: var(--jade-dark); background: rgba(142,224,183,.25); border: 1px solid var(--line); border-radius: 99px; font-weight: 800; }
+
+        .layout { display: grid; grid-template-columns: 360px minmax(0, 1fr); gap: 24px; align-items: start; }
+        .panel { background: var(--card); border: 1px solid rgba(255,255,255,.9); border-radius: 24px; box-shadow: var(--shadow); }
+        .tool-column { position: sticky; top: 96px; display: grid; gap: 18px; }
+        .create-panel, .invite-panel { padding: 28px; }
+        .panel-label { margin: 0 0 7px; color: var(--jade-dark); font: 800 11px/1.3 "Consolas", monospace; letter-spacing: .14em; }
+        h2 { margin: 0; font-size: 24px; letter-spacing: -.035em; }
+        .panel-copy { margin: 9px 0 24px; color: var(--muted); line-height: 1.6; font-size: 14px; }
+        label { display: block; margin: 17px 0 0; font-size: 14px; font-weight: 800; }
+        input {
+            width: 100%;
+            margin-top: 8px;
+            padding: 13px 14px;
+            color: var(--ink);
+            background: white;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            outline: none;
+        }
+        input:focus { border-color: var(--jade); box-shadow: 0 0 0 4px rgba(43,138,98,.1); }
+        .create-panel .solid-button { width: 100%; margin-top: 22px; }
+        .label-row { display: flex; align-items: end; justify-content: space-between; gap: 12px; }
+        .label-row label { flex: 1; }
+        .mini-button { padding: 5px 8px; color: var(--jade-dark); background: rgba(142,224,183,.18); border: 1px solid var(--line); border-radius: 8px; cursor: pointer; font-size: 12px; font-weight: 800; }
+        .credential-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 13px; }
+        .credential-actions button { margin: 0; }
+        .form-message { min-height: 22px; margin: 13px 0 0; color: var(--danger); font-size: 13px; line-height: 1.5; }
+        .form-message.success { color: var(--jade-dark); }
+
+        .invite-create { display: grid; grid-template-columns: 104px minmax(0, 1fr); align-items: end; gap: 9px; }
+        .invite-create label { margin: 0; }
+        .invite-create input { margin-top: 7px; }
+        .invite-create .solid-button { width: 100%; }
+        .invite-list { display: grid; gap: 9px; margin-top: 17px; max-height: 330px; overflow: auto; }
+        .invite-row { padding: 12px; background: rgba(255,255,255,.72); border: 1px solid var(--line); border-radius: 12px; }
+        .invite-code { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .invite-code strong { overflow-wrap: anywhere; color: var(--jade-dark); font: 900 14px/1.2 "Consolas", monospace; letter-spacing: .06em; }
+        .invite-meta { margin-top: 7px; color: var(--muted); font-size: 11px; line-height: 1.5; }
+        .invite-limit-control { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: end; gap: 7px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--line); }
+        .invite-limit-control label { margin: 0; color: var(--muted); font-size: 11px; }
+        .invite-limit-control input { min-width: 0; margin-top: 5px; padding: 8px 9px; border-radius: 8px; font-size: 12px; }
+        .invite-limit-control button { min-height: 33px; padding: 7px 9px; border-radius: 8px; font-size: 11px; }
+        .invite-actions { display: flex; gap: 7px; margin-top: 8px; }
+        .invite-actions button { min-height: 30px; padding: 6px 9px; font-size: 11px; border-radius: 8px; }
+        .invite-state { padding: 3px 6px; color: var(--jade-dark); background: rgba(142,224,183,.22); border-radius: 6px; font-size: 10px; font-weight: 900; }
+        .invite-state.off { color: #6e7d77; background: #e6ece9; }
+        .invite-state.full { color: #80520b; background: #fff0cf; }
+
+        .users-panel { overflow: hidden; }
+        .users-head { display: flex; justify-content: space-between; align-items: center; gap: 20px; padding: 25px 28px 20px; border-bottom: 1px solid var(--line); }
+        .count { color: var(--muted); font: 700 13px/1 "Consolas", monospace; }
+        .user-list { display: grid; }
+        .user-row { display: grid; grid-template-columns: minmax(160px, 1.25fr) .72fr .72fr minmax(210px, auto); align-items: center; gap: 18px; padding: 20px 28px; border-bottom: 1px solid var(--line); }
+        .user-row:last-child { border-bottom: 0; }
+        .user-row:hover { background: rgba(142,224,183,.08); }
+        .identity { min-width: 0; }
+        .username { display: flex; align-items: center; gap: 9px; min-width: 0; font-weight: 900; }
+        .username-text { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .role { padding: 4px 7px; color: var(--jade-dark); background: rgba(142,224,183,.24); border-radius: 6px; font: 800 10px/1 "Consolas", monospace; letter-spacing: .08em; }
+        .meta { margin-top: 6px; color: var(--muted); font-size: 12px; }
+        .metric strong { display: block; font: 800 22px/1.1 "Consolas", monospace; }
+        .metric span { display: block; margin-top: 5px; color: var(--muted); font-size: 12px; }
+        .row-actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 8px; }
+        .row-actions button { min-height: 34px; padding: 8px 10px; font-size: 12px; border-radius: 9px; }
+        .state-dot { width: 8px; height: 8px; flex: 0 0 auto; background: var(--jade); border-radius: 50%; box-shadow: 0 0 0 4px rgba(43,138,98,.11); }
+        .state-dot.off { background: #9aaaa3; box-shadow: none; }
+        .empty, .loading { padding: 60px 28px; color: var(--muted); text-align: center; }
+
+        .balance-panel { margin-top: 24px; overflow: hidden; border-color: rgba(214, 158, 48, .28); }
+        .balance-head {
+            display: flex; align-items: end; justify-content: space-between; gap: 20px; padding: 28px;
+            color: #2b173b;
+            background:
+                radial-gradient(circle at 95% 0, rgba(174, 77, 207, .22), transparent 40%),
+                linear-gradient(135deg, rgba(255, 239, 192, .92), rgba(248, 235, 255, .88));
+            border-bottom: 1px solid rgba(132, 72, 174, .14);
+        }
+        .balance-head .panel-label { color: #8a5710; }
+        .balance-head .panel-copy { max-width: 690px; margin-bottom: 0; color: #51425b; }
+        .config-state { flex: 0 0 auto; color: #674179; font-size: 12px; font-weight: 800; text-align: right; }
+        .config-form { padding: 22px 28px 28px; background: rgba(255,255,255,.38); }
+        .config-groups { display: grid; gap: 12px; }
+        .config-group { overflow: hidden; background: rgba(255,255,255,.76); border: 1px solid var(--line); border-radius: 16px; }
+        .config-group summary { display: flex; align-items: center; gap: 10px; padding: 16px 18px; cursor: pointer; list-style: none; font-weight: 900; }
+        .config-group summary::-webkit-details-marker { display: none; }
+        .config-group summary::before { content: ''; width: 9px; height: 9px; border-radius: 50%; background: var(--group-color, #d99b2f); box-shadow: 0 0 0 5px color-mix(in srgb, var(--group-color, #d99b2f) 16%, transparent); }
+        .config-group summary::after { content: '展开'; margin-left: auto; color: var(--muted); font-size: 11px; }
+        .config-group[open] summary::after { content: '收起'; }
+        .config-group[data-tone="gold"] { --group-color: #d99b2f; }
+        .config-group[data-tone="purple"] { --group-color: #8c51b5; }
+        .config-group[data-tone="red"] { --group-color: #c94c53; }
+        .config-group[data-tone="blue"] { --group-color: #3f7fba; }
+        .config-group[data-tone="orange"] { --group-color: #d46d2f; }
+        .config-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 0 18px 18px; }
+        .config-field { min-width: 0; margin: 0; padding: 13px; background: #fff; border: 1px solid rgba(62, 47, 71, .1); border-radius: 12px; }
+        .config-field span { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+        .config-field b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .config-field em { flex: 0 0 auto; color: #80688b; font-size: 11px; font-style: normal; font-weight: 700; }
+        .config-field input { margin-top: 9px; padding: 10px 11px; border-color: rgba(87, 55, 100, .17); }
+        .config-field small { display: block; min-height: 30px; margin-top: 7px; color: #716579; font-size: 11px; line-height: 1.4; font-weight: 500; }
+        .config-actions { position: sticky; bottom: 12px; z-index: 2; display: flex; align-items: center; justify-content: flex-end; gap: 10px; margin-top: 18px; padding: 12px; background: rgba(255,255,255,.88); border: 1px solid rgba(86,54,100,.14); border-radius: 15px; box-shadow: 0 12px 35px rgba(75,43,87,.12); backdrop-filter: blur(12px); }
+        .config-actions .danger-button { margin-right: auto; }
+        .config-message { min-height: 20px; margin: 0 4px; color: #674179; font-size: 12px; }
+
+        dialog { width: min(440px, calc(100% - 32px)); padding: 0; border: 0; border-radius: 22px; box-shadow: 0 28px 90px rgba(16,34,28,.3); }
+        dialog::backdrop { background: rgba(11,34,26,.42); backdrop-filter: blur(5px); }
+        .dialog-body { padding: 28px; }
+        .dialog-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 24px; }
+        .dialog-error { min-height: 20px; margin: 10px 0 0; color: var(--danger); font-size: 13px; }
+
+        .toast { position: fixed; right: 24px; bottom: 24px; z-index: 10; max-width: min(420px, calc(100% - 48px)); padding: 13px 17px; color: white; background: var(--jade-dark); border-radius: 12px; box-shadow: var(--shadow); transform: translateY(20px); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+        .toast.show { opacity: 1; transform: translateY(0); }
+        .toast.error { background: var(--danger); }
+
+        @media (max-width: 900px) {
+            .layout { grid-template-columns: 1fr; }
+            .tool-column { position: static; }
+            .user-row { grid-template-columns: minmax(0, 1fr) 80px 80px; }
+            .row-actions { grid-column: 1 / -1; justify-content: flex-start; }
+            .config-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        }
+        @media (max-width: 620px) {
+            .topbar { padding: 12px 16px; }
+            .brand span:last-child { display: none; }
+            main { width: min(100% - 24px, 1180px); padding-top: 34px; }
+            .hero { align-items: start; flex-direction: column; }
+            .user-row { grid-template-columns: 1fr 70px; padding: 18px; }
+            .metric.runs { display: none; }
+            .users-head { padding: 22px 18px; }
+            .balance-head { align-items: start; flex-direction: column; padding: 22px 18px; }
+            .config-state { text-align: left; }
+            .config-form { padding: 16px 12px 20px; }
+            .config-grid { grid-template-columns: 1fr; padding: 0 12px 12px; }
+            .config-actions { flex-wrap: wrap; }
+            .config-message { order: 3; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <header class="topbar">
+        <div class="brand"><span class="brand-mark">几</span><span>几何围猎 · 管理中心</span></div>
+        <nav class="top-actions">
+            <a class="link-button" href="/">返回游戏</a>
+            <button class="ghost-button" id="logoutButton" type="button">退出登录</button>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div>
+                <p class="eyebrow">玩家与注册码管理</p>
+                <h1>玩家通行证</h1>
+                <p>管理员可以创建或随机生成玩家账号，也可以为每个注册码单独设置可注册人数。账号或注册码停用后会立即停止相应访问。</p>
+            </div>
+            <div class="admin-chip" id="adminIdentity">管理员</div>
+        </section>
+
+        <div class="layout">
+            <div class="tool-column">
+                <form class="panel create-panel" id="createForm">
+                    <p class="panel-label">创建玩家账号</p>
+                    <h2>账号与密码</h2>
+                    <p class="panel-copy">可分别随机生成账号或密码，也可一次生成完整凭证。新账号只有游戏和竞技榜权限。</p>
+                    <div class="label-row"><label for="newUsername">玩家账号</label><button class="mini-button" type="button" data-generate="username">随机账号</button></div>
+                    <input id="newUsername" name="username" maxlength="24" required autocomplete="off" placeholder="例如：player_01">
+                    <div class="label-row"><label for="newPassword">初始密码</label><button class="mini-button" type="button" data-generate="password">随机密码</button></div>
+                    <input id="newPassword" name="password" type="text" minlength="8" maxlength="128" required autocomplete="off" placeholder="至少 8 位">
+                    <div class="credential-actions">
+                        <button class="ghost-button" type="button" data-generate="both">随机生成一组</button>
+                        <button class="ghost-button" type="button" id="copyCredentials">复制完整凭证</button>
+                    </div>
+                    <button class="solid-button" type="submit">创建玩家账号</button>
+                    <p class="form-message" id="createMessage" aria-live="polite"></p>
+                </form>
+
+                <section class="panel invite-panel" aria-labelledby="inviteTitle">
+                    <p class="panel-label">自助注册许可</p>
+                    <h2 id="inviteTitle">注册码</h2>
+                    <p class="panel-copy">创建时设置使用上限，之后仍可单独调整。达到上限后注册码会自动停止接受新注册。</p>
+                    <div class="invite-create">
+                        <label for="inviteMaxUses">可注册人数
+                            <input id="inviteMaxUses" type="number" min="1" max="1000000" step="1" value="5" inputmode="numeric" required>
+                        </label>
+                        <button class="solid-button" id="generateInvite" type="button">生成并复制</button>
+                    </div>
+                    <div class="invite-list" id="inviteList"><div class="loading">正在读取注册码…</div></div>
+                </section>
+            </div>
+
+            <section class="panel users-panel" aria-labelledby="usersTitle">
+                <div class="users-head">
+                    <div>
+                        <p class="panel-label">玩家与管理员</p>
+                        <h2 id="usersTitle">账号列表</h2>
+                    </div>
+                    <span class="count" id="userCount">载入中</span>
+                </div>
+                <div class="user-list" id="userList"><div class="loading">正在读取账号…</div></div>
+            </section>
+        </div>
+
+        <section class="panel balance-panel" aria-labelledby="balanceTitle">
+            <div class="balance-head">
+                <div>
+                    <p class="panel-label">实时平衡控制台</p>
+                    <h2 id="balanceTitle">游戏参数</h2>
+                    <p class="panel-copy">修改怪潮、成长、普攻、补给与技能数值。保存后，玩家下一次开始游戏时自动采用新参数，无需重新部署。</p>
+                </div>
+                <div class="config-state" id="configState">正在读取当前参数…</div>
+            </div>
+            <form class="config-form" id="gameConfigForm">
+                <div class="config-groups" id="configGroups"><div class="loading">正在载入游戏参数…</div></div>
+                <div class="config-actions">
+                    <button class="danger-button" id="resetGameConfig" type="button">恢复默认参数</button>
+                    <p class="config-message" id="configMessage" aria-live="polite"></p>
+                    <button class="solid-button" type="submit">保存并应用</button>
+                </div>
+            </form>
+        </section>
+    </main>
+
+    <dialog id="resetDialog">
+        <form class="dialog-body" id="resetForm" method="dialog">
+            <p class="panel-label">账号安全设置</p>
+            <h2>重置密码</h2>
+            <p class="panel-copy">为 <strong id="resetUsernameLabel"></strong> 设置新密码。</p>
+            <input type="hidden" id="resetUsername">
+            <label for="resetPassword">新密码</label>
+            <input id="resetPassword" type="password" minlength="8" maxlength="128" required autocomplete="new-password">
+            <p class="dialog-error" id="resetError"></p>
+            <div class="dialog-actions">
+                <button class="ghost-button" type="button" id="cancelReset">取消</button>
+                <button class="solid-button" type="submit">确认重置</button>
+            </div>
+        </form>
+    </dialog>
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script>
+        const userList = document.getElementById('userList');
+        const userCount = document.getElementById('userCount');
+        const createForm = document.getElementById('createForm');
+        const createMessage = document.getElementById('createMessage');
+        const inviteList = document.getElementById('inviteList');
+        const resetDialog = document.getElementById('resetDialog');
+        const resetForm = document.getElementById('resetForm');
+        const toast = document.getElementById('toast');
+        const gameConfigForm = document.getElementById('gameConfigForm');
+        const configGroups = document.getElementById('configGroups');
+        const configState = document.getElementById('configState');
+        const configMessage = document.getElementById('configMessage');
+
+        const escapeHtml = (value) => String(value ?? '').replace(/[&<>'"]/g, char => ({'&':'&amp;','<':'&lt;','>':'&gt;',"'":'&#39;','"':'&quot;'}[char]));
+        const formatDate = (value) => value ? new Intl.DateTimeFormat('zh-CN', {dateStyle:'medium', timeStyle:'short'}).format(new Date(value)) : '尚未登录';
+
+        const configSections = [
+            {title:'怪潮与成长', tone:'red', fields:[
+                ['monster_cap','怪物总数上限',20,600,1,'只','同时留在场上的怪物上限'],
+                ['spawn_interval_start','初始刷怪间隔',.15,5,.01,'秒','开局时每批怪物的间隔'],
+                ['spawn_interval_min','最低刷怪间隔',.08,3,.01,'秒','后期刷怪速度不会快过此值'],
+                ['spawn_time_accel','随时间加速',0,.02,.0001,'系数','每秒缩短刷怪间隔的幅度'],
+                ['spawn_level_accel','随等级加速',0,.15,.001,'系数','每级缩短刷怪间隔的幅度'],
+                ['spawn_batch_max','单批数量上限',1,30,1,'只','一次最多生成多少只怪'],
+                ['monster_speed_scale','怪物基础速度',.2,2,.01,'倍','所有怪物出生时的移速倍率'],
+                ['monster_speed_level_growth','速度等级成长',0,.08,.001,'系数','怪物速度随玩家等级增长'],
+                ['monster_speed_time_growth','速度时间成长',0,.08,.001,'系数','怪物速度随对局时间增长'],
+                ['monster_hp_scale','怪物基础生命倍率',.2,10,.05,'倍','普通怪与精英怪出生时的统一生命倍率'],
+                ['monster_hp_growth','生命成长',0,.5,.005,'系数','怪物生命随等级增长'],
+                ['monster_hp_time_growth','生命时间成长',0,2,.005,'倍率/分钟','怪物生命随每分钟对局时间持续增长，无硬上限'],
+                ['monster_damage_growth','伤害成长',0,.25,.002,'系数','怪物伤害随等级增长']
+            ]},
+            {title:'精英怪与首领', tone:'purple', fields:[
+                ['elite_base_chance','精英怪基础概率',0,.5,.1,'%','从 3 级开始的基础出现概率',true],
+                ['elite_level_chance','精英怪每级增长',0,.05,.1,'%','每级增加的精英怪概率',true],
+                ['elite_max_chance','精英怪概率上限',0,.8,.1,'%','精英怪最终概率上限',true],
+                ['scarab_chance','激光甲虫概率',0,.35,.1,'%','每次刷怪变为甲虫的概率',true],
+                ['ninja_chance','影刃忍者概率',0,.35,.1,'%','从 3 级开始生成忍者精英的概率',true],
+                ['ninja_reflect_cooldown','忍者挥刀冷却',.2,30,.1,'秒','忍者再次反弹玩家弹幕前的间隔'],
+                ['ninja_thrust_charge','忍者突刺蓄力',.15,5,.05,'秒','锁定落点后进入不可选中突刺前的预警时间'],
+                ['railgun_chance','电磁炮概率',0,.2,.1,'%','从 4 级开始生成稀有电磁炮精英的概率',true],
+                ['railgun_charge_time','电磁炮蓄能时间',.3,10,.1,'秒','发射巨型吞弹弹幕前的预警时间'],
+                ['railgun_projectile_radius','电磁巨弹大小',8,100,1,'像素','巨型电磁弹的碰撞与吞弹范围'],
+                ['enemy_bullet_cap','敌方弹幕总上限',40,1000,10,'发','全场同时存在的敌方弹幕安全上限'],
+                ['enemy_bullet_damage_scale','敌方弹幕伤害倍率',.1,10,.05,'倍','所有敌方弹幕最终伤害的统一倍率'],
+                ['artillery_max_count','棱镜炮台上限',0,12,1,'只','场上同时存在的棱镜炮台数量上限'],
+                ['boss_first_level','首领首次等级',1,100,1,'级','达到该等级会召唤首领'],
+                ['boss_level_interval','首领等级间隔',1,100,1,'级','此后每隔多少级再次出现'],
+                ['boss_first_time','首领首次时间',10,3600,5,'秒','即使等级不足也会按时间出现'],
+                ['boss_time_interval','首领时间间隔',10,3600,5,'秒','每次首领后的时间间隔'],
+                ['boss_hp_base','首领基础生命',20,100000,10,'点','巨像生命计算的基础值'],
+                ['boss_hp_per_level','首领每级生命',0,1000,1,'点','玩家每级增加的巨像生命'],
+                ['boss_hp_level_scale','首领等级倍率',0,2,.01,'倍率','对三类首领的等级成长强度'],
+                ['boss_hp_level_exponent','首领成长指数',.5,3,.01,'指数','等级越高，首领生命成长越明显'],
+                ['boss_damage','巨像基础伤害',.1,1000,.1,'点','星骸巨像碰撞与技能伤害的基础值'],
+                ['boss_barrage_base','巨像基础弹幕量',4,120,1,'发','每轮环形弹幕的基础数量'],
+                ['boss_barrage_per_level','巨像每级弹幕',0,10,.05,'发','随玩家等级追加的每轮弹幕量'],
+                ['boss_fire_interval','巨像射击间隔',.3,10,.05,'秒','巨像低等级时的弹幕间隔'],
+                ['boss_fire_level_reduction','每级间隔缩短',0,.5,.005,'秒','每级缩短弹幕间隔，最低仍保留反应时间'],
+                ['boss_multi_start_level','多巨像起始等级',2,200,1,'级','达到该等级后允许两只星骸巨像同时出现'],
+                ['boss_multi_level_interval','巨像数量成长间隔',1,200,1,'级','此后每隔多少级增加一只可同时存在的巨像'],
+                ['boss_room_elite_base','首领房精英数量',0,30,1,'只','每场首领房随正式首领一同入场的额外精英怪'],
+                ['boss_room_elite_growth_interval','精英增员间隔',1,50,1,'场','每隔多少场首领房追加一只精英怪'],
+                ['boss_advanced_start_wave','高阶首领起始场次',1,50,1,'场','从这一场开始加入末影龙与夜幕刺客'],
+                ['boss_absorb_hp_ratio','首领献祭吸收比例',0,2,.05,'倍','首领进场清除杂兵后，吸收其剩余生命的比例'],
+                ['boss_speed_scale','首领移动倍率',.25,5,.05,'倍','所有首领相对同类基础速度的统一倍率'],
+                ['boss_reaction_scale','首领反应敏感度',.25,5,.05,'倍','提高预判、闪避与区域技能反应速度'],
+                ['boss_hazard_cooldown','反格挡药剂间隔',1,60,.5,'秒','首领投掷燃烧、冰冻或剧毒药剂的基础间隔'],
+                ['boss_hazard_warning','药剂区域预警',.3,5,.05,'秒','危险区域落地前留给玩家的走位时间'],
+                ['boss_hazard_radius','药剂区域半径',30,300,5,'像素','不可格挡区域攻击的覆盖范围'],
+                ['boss_hazard_duration','药剂区域持续',.5,20,.5,'秒','燃烧、冰冻与毒蚀区域留场时间'],
+                ['boss_hazard_damage','药剂基础伤害',.1,100,.05,'点','区域攻击每次伤害结算的基础值'],
+                ['dragon_hp','末影龙基础生命',10,100000,5,'点','进入生命成长公式前的基础值'],
+                ['dragon_speed','末影龙移动速度',10,500,5,'像素/秒','盘旋追猎玩家时的基础速度'],
+                ['dragon_breath_cooldown','烈焰吐息间隔',.5,60,.1,'秒','两次不可格挡吐息之间的冷却'],
+                ['dragon_breath_warning','烈焰吐息预警',.15,5,.05,'秒','喷吐前显示方向与范围的时间'],
+                ['dragon_breath_range','烈焰吐息距离',100,2000,10,'像素','锥形吐息能够覆盖的最远距离'],
+                ['dragon_breath_arc_deg','烈焰吐息角度',5,180,1,'度','吐息锥形区域的总角度'],
+                ['dragon_blackhole_cooldown','黑洞圈间隔',1,90,.5,'秒','两次强制吸附之间的冷却'],
+                ['dragon_blackhole_warning','黑洞圈预警',.2,8,.05,'秒','吸附生效前留给玩家的走位时间'],
+                ['dragon_blackhole_radius','黑洞圈半径',30,500,5,'像素','强制吸附区域的覆盖范围'],
+                ['dragon_blackhole_duration','黑洞圈持续',.3,15,.1,'秒','不可格挡吸附的持续时间'],
+                ['dragon_blackhole_pull','黑洞吸力',20,1500,10,'像素/秒','越高越难从黑洞范围中脱离'],
+                ['assassin_hp','夜幕刺客基础生命',5,100000,5,'点','刺客生命低于其他首领，但仍参与首领成长'],
+                ['assassin_speed','夜幕刺客移动速度',20,800,5,'像素/秒','普通游走与寻找突刺距离时的速度'],
+                ['assassin_dash_cooldown','超远突刺间隔',.5,60,.1,'秒','两次锁定路线突刺之间的冷却'],
+                ['assassin_dash_charge','超远突刺前摇',.1,5,.05,'秒','突刺轨迹出现到开始冲刺的时间'],
+                ['assassin_dash_speed','超远突刺速度',100,3000,25,'像素/秒','沿固定轨迹突刺时的速度'],
+                ['assassin_backstab_cooldown','背刺瞬移间隔',.5,90,.1,'秒','瞬移至玩家背后前的基础冷却'],
+                ['assassin_backstab_warning','背刺挥刀前摇',.1,5,.05,'秒','瞬移后挥刀前留给玩家的反应时间'],
+                ['assassin_tracking_rate','刺客突刺追踪',0,8,.05,'系数','蓄力期间修正突刺目标的追踪强度，冲出后不再转向'],
+                ['witch_boss_hp','女巫首领生命',5,100000,5,'点','暮沼女巫进入首领成长公式前的基础生命'],
+                ['witch_boss_speed','女巫首领移速',20,800,5,'像素/秒','女巫游走、规避与拉开距离的基础速度'],
+                ['witch_boss_damage','女巫首领伤害',.1,1000,.1,'点','女巫弹幕和接触攻击的基础伤害'],
+                ['witch_boss_summon_cooldown','女巫召唤间隔',1,90,.1,'秒','补充咒骨侍从的基础冷却'],
+                ['witch_boss_minion_count','女巫侍从数量',1,20,1,'只','每名女巫维持的咒骨侍从数量'],
+                ['witch_boss_volley_cooldown','女巫弹幕间隔',.4,30,.05,'秒','扇形和环形咒弹之间的基础间隔'],
+                ['witch_boss_blink_cooldown','女巫闪现间隔',1,60,.1,'秒','女巫短距离换位的基础冷却'],
+                ['headless_hp','无头骑士基础生命',10,100000,5,'点','骑乘与落马阶段共用的生命值，参与首领成长'],
+                ['headless_speed','无头骑士移动速度',20,600,5,'像素/秒','非冲锋状态下的基础移动速度'],
+                ['headless_split_ratio','落马生命比例',.1,.8,.05,'%','生命降至该比例时战马脱离并独立作战',true],
+                ['headless_charge_cooldown','骑士冲锋间隔',1,60,.1,'秒','骑乘阶段两次预警冲锋之间的冷却'],
+                ['headless_charge_warning','骑战冲锋预警',.2,5,.05,'秒','橙色冲锋路线出现后留给玩家的反应时间'],
+                ['headless_charge_speed','骑士冲锋速度',100,2000,25,'像素/秒','骑乘阶段沿锁定路线突进的速度'],
+                ['headless_lance_cooldown','幽火长枪间隔',.5,60,.1,'秒','骑士再次投掷扇形幽火长枪前的冷却'],
+                ['headless_lance_count','幽火长枪数量',1,20,1,'发','每轮扇形长枪弹幕的数量'],
+                ['warhorse_hp_ratio','战马生命比例',.1,2,.05,'倍','独立战马生命相对骑士最大生命的比例'],
+                ['warhorse_charge_cooldown','战马冲锋间隔',1,60,.1,'秒','独立战马两次迂回冲锋之间的冷却'],
+                ['warhorse_charge_speed','战马冲锋速度',100,2500,25,'像素/秒','独立战马横向穿越战场时的速度'],
+                ['hoof_flame_duration','马蹄幽火持续',.3,12,.1,'秒','冲锋路线留下的不可格挡火焰持续时间'],
+                ['hero_base_hp','英雄基础体力',5,1000,5,'点','牢笼英雄加入队伍时的基础体力'],
+                ['hero_hp_per_level','英雄每级体力',0,100,.5,'点','按玩家等级追加的英雄体力成长'],
+                ['hero_recovery_time','英雄休整时间',5,180,1,'秒','体力耗尽虚化后恢复并返场所需时间'],
+                ['hero_interact_range','牢笼交互范围',40,400,5,'像素','玩家按 G 或点按牢笼可救援的距离'],
+                ['hero_cage_chance','牢笼出现概率',0,1,.1,'%','赢下首领房后出现可救援角色的概率',true],
+                ['hero_rare_weight','稀有英雄权重',.05,1,.05,'倍','女巫和国王相对普通英雄的抽取权重'],
+                ['hero_angel_heal','天使治疗量',.1,100,.1,'点','天使每次为玩家恢复的生命值'],
+                ['hero_knight_block_cooldown','骑士格挡冷却',.2,30,.05,'秒','骑士以圣剑反弹下一枚敌弹前的间隔'],
+                ['hero_princess_ammo_bonus','公主弹匣增益',1,500,1,'发','首次救援公主时永久增加的最大弹药量'],
+                ['witch_summon_cooldown','女巫召唤间隔',1,90,.5,'秒','女巫再次召唤精英骷髅前的冷却'],
+                ['witch_skeleton_count','女巫骷髅数量',1,20,1,'只','女巫每轮召唤的临时精英骷髅数量'],
+                ['king_summon_cooldown','国王列阵间隔',1,90,.5,'秒','国王再次召唤骑士幽灵前的冷却'],
+                ['king_ghost_count','王庭幽灵数量',1,30,1,'名','国王每轮召唤的骑士幽灵数量'],
+                ['pirate_first_time','黑潮号首次来袭',20,3600,5,'秒','开局后首次进入海盗船长事件的时间'],
+                ['pirate_spawn_interval','黑潮号再临间隔',30,3600,5,'秒','海盗船长事件之间的基础间隔'],
+                ['pirate_hp','黑潮号基础生命',10,100000,5,'点','海盗船长进入首领成长公式前的基础生命'],
+                ['pirate_speed','黑潮号航速',20,800,5,'像素/秒','海盗船横越战场及船毁后船长追击的基础速度'],
+                ['pirate_damage','海盗船长伤害',.1,1000,.1,'点','碰撞、船炮和愤怒重击的基础伤害'],
+                ['pirate_sailor_count','登船水手数量',1,30,1,'名','每艘黑潮号逐步投放的水手总数'],
+                ['pirate_sailor_respawn_cooldown','水手补员间隔',1,90,.1,'秒','水手减员后黑潮号补充一名水手的时间'],
+                ['pirate_cannon_warning','船炮预警时间',.3,6,.05,'秒','船炮锁定落点到开火的反应时间'],
+                ['pirate_cannon_cooldown','船炮轰击间隔',1,30,.1,'秒','海盗船长两次船炮齐射间隔'],
+                ['pirate_cannon_damage_scale','船炮伤害倍率',.1,10,.05,'倍','不可格挡船炮相对船长基础伤害的倍率'],
+                ['pirate_rage_hp_ratio','船毁生命比例',.1,1,.05,'%','生命降到该比例后船毁，船长现身进入愤怒阶段',true],
+                ['pirate_rage_slam_cooldown','愤怒重击间隔',.5,30,.1,'秒','船毁后船长瞬移重击之间的冷却'],
+                ['pirate_water_speed_boost','黑潮水域移速',1,2,.01,'倍','黑潮号在场时玩家、怪物与伙伴的统一移速倍率'],
+                ['colossus_crater_radius','巨像弹坑半径',30,180,1,'像素','星骸巨像落地后形成的实体障碍范围'],
+                ['colossus_crater_duration','巨像弹坑持续',.5,120,.5,'秒','弹坑阻挡单位后收缩消散的总时间']
+            ]},
+            {title:'补给与拾取', tone:'gold', fields:[
+                ['supply_spawn_chance','补给出现概率',0,1,.1,'%','每次补给计时结束后的生成概率',true],
+                ['supply_interval_min','补给最短间隔',.5,180,.5,'秒','补给生成计时的基础值'],
+                ['supply_interval_random','补给随机浮动',0,180,.5,'秒','在基础间隔上随机增加的时间'],
+                ['supply_max_count','场上补给上限',1,100,1,'个','同时存在的补给数量上限'],
+                ['supply_magnet_range','自动吸附范围',0,1000,5,'像素','玩家靠近后补给开始飞来'],
+                ['supply_pickup_bonus','额外拾取范围',0,250,1,'像素','在角色碰撞范围外额外判定拾取'],
+                ['health_potion_amount','生命药水累计量',.1,1000,.5,'点','每瓶药水同时增加的最大生命和当前生命，可无限累计']
+            ]},
+            {title:'冒险者基础属性', tone:'blue', fields:[
+                ['player_health','初始生命',1,1000,.5,'点','每局开始时的生命与生命上限'],
+                ['player_speed','移动速度',40,1200,5,'像素/秒','冒险者基础移动速度'],
+                ['life_on_kill','初始击破汲血',0,100,.01,'生命/只','每消灭一名敌人恢复的基础生命值，局内仍可继续强化'],
+                ['health_per_level','每级体力成长',0,100,.05,'点/级','升级时自动增加并补充的生命上限，无成长上限'],
+                ['player_shield','初始再生护盾',0,1000,.1,'点','开局护盾值，1 点护盾可抵挡 1 点生命伤害'],
+                ['shield_per_level','每级护盾成长',0,100,.05,'点/级','每次升级增加并补充的护盾上限，无成长上限'],
+                ['shield_regen_delay','护盾恢复延迟',0,120,.1,'秒','受到实际攻击后等待多久开始恢复护盾'],
+                ['shield_regen_rate','护盾恢复速度',0,100,.05,'点/秒','延迟结束后每秒自动恢复的护盾值'],
+                ['player_ammo','初始弹药',1,10000,1,'发','每局开始时的弹药与上限'],
+                ['ammo_recovery','弹药基础恢复',0,200,.1,'发/秒','一级时的弹药自动恢复速度'],
+                ['ammo_recovery_level_growth','弹药恢复等级成长',0,2,.005,'系数','每次升级都会自然提高弹药恢复速度，无需抽取强化'],
+                ['ammo_recovery_empty_multiplier','空仓恢复倍率',1,5,.05,'倍','弹仓见底时的最大恢复倍率；满仓附近仍保持基础恢复速度'],
+                ['ammo_emergency_cooldown','应急供弹冷却',1,120,1,'秒','弹药彻底耗尽后，再次触发自动补弹需要等待的时间'],
+                ['ammo_emergency_base','应急供弹基础量',1,1000,1,'发','初始弹匣容量下，弹仓见底时立刻补充的弹药'],
+                ['ammo_emergency_max_ammo_scale','应急供弹容量成长',0,2,.05,'发/额外上限','弹匣上限高于初始值后，每一点额外容量转化的补弹量'],
+                ['ammo_per_level','每级弹匣成长',0,500,1,'发/级','升级时自动增加并补充的弹药上限，无成长上限'],
+                ['basic_damage','普攻基础伤害',.05,1000,.05,'点','每枚普通子弹的基础伤害'],
+                ['bullet_speed','普通子弹速度',50,2500,10,'像素/秒','普通子弹飞行速度'],
+                ['bullet_radius','普通子弹大小',1,30,.1,'像素','普通子弹的碰撞半径']
+            ]},
+            {title:'普攻与霰弹成长', tone:'orange', fields:[
+                ['base_penetration','初始穿透',0,100,1,'只','普通子弹初始可贯穿数量'],
+                ['base_multishot','每轮基础弹数',1,100,1,'发','一次齐射生成的基础弹数'],
+                ['fire_interval','基础射击间隔',.02,5,.01,'秒','均衡状态以此为基础；4 / 5 键可连续降低或提高射速'],
+                ['basic_damage_growth','伤害等级成长',0,1,.005,'系数','普攻伤害随等级自然增长'],
+                ['basic_damage_late_start','后期增伤起始等级',1,100,1,'级','从该等级后开始叠加额外的加速成长'],
+                ['basic_damage_late_growth','后期增伤成长',0,1,.005,'系数','避免后期玩家与怪物互相刮痧的额外普攻成长'],
+                ['fire_rate_growth','射速等级成长',0,.5,.002,'系数','射击间隔随等级自然缩短'],
+                ['volley_level_interval','多发成长间隔',1,100,1,'级','每隔多少级自然增加一发齐射'],
+                ['penetration_level_interval','穿透成长间隔',1,100,1,'级','每隔多少级自然增加一次穿透'],
+                ['laser_base_chance','激光基础概率',0,1,.01,'概率','普通攻击触发贯穿激光的一级概率'],
+                ['laser_chance_per_level','激光概率等级成长',0,.25,.001,'概率/级','每次升级自然增加的激光触发概率'],
+                ['laser_max_chance','激光概率上限',0,1,.01,'概率','激光触发概率的安全上限'],
+                ['laser_damage_scale','激光伤害倍率',.1,100,.1,'倍','激光相对当前普攻伤害的基础倍率'],
+                ['laser_damage_level_growth','激光额外等级成长',0,2,.005,'系数','除普攻成长外，激光自身随等级获得的额外伤害成长'],
+                ['laser_sweep_unlock_level','扫射激光解锁等级',1,100,1,'级','达到该等级后，普通激光有概率转为扫射激光'],
+                ['laser_sweep_base_chance','扫射激光基础概率',0,1,.01,'概率','解锁等级时，激光转为扫射形态的概率'],
+                ['laser_sweep_chance_per_level','扫射概率等级成长',0,.25,.001,'概率/级','解锁后每级增加的扫射形态概率'],
+                ['laser_sweep_max_chance','扫射概率上限',0,1,.01,'概率','激光转为扫射形态的安全上限'],
+                ['laser_sweep_degrees','扫射基础角度',5,360,5,'度','扫射激光覆盖的基础扇区角度'],
+                ['laser_sweep_degrees_per_level','扫射角度等级成长',0,30,.5,'度/级','解锁后每级增加的横扫角度'],
+                ['burst_shots','点按连射次数',1,12,1,'发','单击一次连续射击多少轮'],
+                ['burst_interval','连射内部间隔',.01,1,.01,'秒','三连射等连续射击的内部间隔'],
+                ['shotgun_unlock_level','霰弹解锁等级',1,100,1,'级','达到该等级后出现霰弹追加'],
+                ['shotgun_every_bursts','霰弹触发频率',1,30,1,'轮','每多少轮齐射追加一次霰弹'],
+                ['shotgun_pellets','霰弹弹丸数',1,60,1,'发','一次霰弹追加的弹丸数量'],
+                ['shotgun_spread_deg','霰弹扩散角',1,180,1,'度','霰弹覆盖的总角度']
+            ]},
+            {title:'等级与强化节奏', tone:'gold', fields:[
+                ['xp_base','升级经验基础值',1,10000,1,'经验','每级经验公式的固定部分'],
+                ['xp_level_factor','升级经验成长值',0,1000,.5,'系数','等级幂次结果的倍率'],
+                ['xp_exponent','升级经验指数',.5,4,.01,'指数','越高则后期升级越慢'],
+                ['upgrade_first_level','首次强化等级',2,100,1,'级','第一次弹出局内强化选择的等级'],
+                ['upgrade_gap_start','强化初始间隔',1,100,1,'级','第一次强化后的等级间隔'],
+                ['upgrade_gap_growth','强化间隔增量',0,30,1,'级','每次强化后间隔再增加多少级']
+            ]},
+            {title:'环身器灵与御剑天赋', tone:'blue', fields:[
+                ['spirit_slash_interval','器灵基础挥砍间隔',.4,30,.05,'秒','均衡射速下自动环身挥砍的基础间隔'],
+                ['spirit_fire_rate_link','器灵射速联动强度',0,2,.05,'系数','4 / 5 键射速变化影响器灵挥砍间隔的程度'],
+                ['spirit_level_haste_growth','器灵等级急速成长',0,.5,.002,'系数','升级带来的额外挥砍加速，无成长上限'],
+                ['spirit_blade_level_interval','新增刀体等级间隔',1,100,1,'级','每隔多少级增加一把环绕刀体'],
+                ['spirit_slash_radius','器灵基础挥砍范围',40,500,5,'像素','环身挥砍的一级基础半径'],
+                ['spirit_slash_radius_per_level','器灵每级范围成长',0,30,.1,'像素/级','每次升级自动扩大的挥砍半径'],
+                ['spirit_slash_duration','器灵挥砍持续时间',.1,3,.02,'秒','单次挥砍动画与弹幕拦截窗口'],
+                ['spirit_slash_damage_scale','器灵挥砍伤害倍率',.05,10,.05,'倍','环身挥砍相对当前普攻伤害的倍率'],
+                ['spirit_bullet_block_base','器灵基础斩弹数量',0,200,1,'发/次','单次普通挥砍最多斩落的敌方弹幕数；建议保持较低，让宝剑以进攻为主'],
+                ['spirit_talk_cooldown','器灵台词间隔',3,120,1,'秒','战斗台词的最低间隔，避免连续刷屏'],
+                ['spirit_talent_cooldown','御剑天赋冷却',5,120,1,'秒','御剑飞行、万剑归宗和飞剑循环各自的冷却时间'],
+                ['spirit_flight_duration','御剑飞行持续时间',.5,15,.5,'秒','加速并留下属性伤害航迹的持续时间'],
+                ['spirit_trail_damage_scale','御剑航迹伤害倍率',.02,10,.02,'倍','单段航迹相对当前普攻伤害的倍率'],
+                ['spirit_convergence_duration','万剑归宗持续时间',.3,8,.05,'秒','属性剑光扫射的持续时间'],
+                ['spirit_convergence_damage_scale','万剑归宗伤害倍率',.05,10,.05,'倍','每名敌人受到一次剑光扫射的伤害倍率'],
+                ['spirit_cycle_duration','飞剑循环持续时间',.5,10,.1,'秒','高速切割并提供有限斩弹、减伤的时间'],
+                ['spirit_cycle_damage_scale','飞剑循环伤害倍率',.05,10,.05,'倍','每次循环切割相对当前普攻伤害的倍率']
+            ]},
+            {title:'盾牌、技能与吹箭兵', tone:'purple', fields:[
+                ['shield_cooldown','主动举盾冷却',.2,30,.05,'秒','短按空格主动预判格挡后的基础冷却'],
+                ['shield_reflect_heal_scale','反弹击破回血效率',0,1,.05,'倍','盾牌反弹弹幕击杀时，击破回血按此比例结算'],
+                ['shield_windup','主动预判前摇',0,3,.01,'秒','短按空格到完美格挡窗口生效的延迟'],
+                ['shield_active','守御持续时间',.05,5,.01,'秒','自动光圈或主动预判触发后的格挡时间'],
+                ['shield_perfect','完美格挡窗口',0,2,.01,'秒','主动预判生效初段的完美判定时间；成功后冷却立即清零'],
+                ['passive_guard_cooldown','自动守御冷却',.2,30,.05,'秒','受击自动释放防御光圈后的独立冷却'],
+                ['passive_guard_radius','守御光圈范围',40,500,5,'像素','被攻击时自动反击、击退和反弹弹幕的范围'],
+                ['passive_guard_damage_scale','守御反击伤害',.05,10,.05,'倍','防御光圈相对当前普攻伤害的倍率'],
+                ['passive_guard_knockback','守御击退距离',0,300,5,'像素','光圈推开普通敌人的距离，首领只承受部分击退'],
+                ['barrier_fire_interval','翠幕免费火网间隔',.02,3,.01,'秒','翠幕屏障期间免费锁敌与环形弹幕的射击间隔'],
+                ['barrier_barrage_count','翠幕免费弹幕数量',1,60,1,'发/轮','翠幕屏障每轮免费弹幕的基础数量'],
+                ['shield_arc_deg','格挡角度',20,360,5,'度','面向方向可格挡的扇形角度'],
+                ['stone_hold_delay','坚如磐石长按判定',.2,2,.05,'秒','按住空格多久后进入坚守姿态'],
+                ['stone_duration','坚如磐石持续时间',.5,30,.5,'秒','原地无敌并倾泻普攻弹幕的时长'],
+                ['stone_cooldown','坚如磐石冷却',1,120,1,'秒','姿态结束后开始计算的内置冷却'],
+                ['stone_ammo_refund_ratio','坚守弹药返还',0,1,.1,'%','坚如磐石结束时返还本次姿态消耗的弹药比例',true],
+                ['stone_fire_interval','坚守火网基础间隔',.01,2,.01,'秒','环形火网的均衡档间隔，会随 4/5 射速级数变化并真实消耗弹药'],
+                ['stone_barrage_count','坚守基础弹幕数量',1,60,1,'发/轮','每轮一发锁敌主弹加多方向环形弹，等级齐射与多发强化还会继续增加'],
+                ['stone_melee_interval','坚守近战间隔',.1,3,.05,'秒','坚守姿态对近身敌人造成震击的间隔'],
+                ['stone_melee_range','坚守近战范围',20,200,2,'像素','以冒险者为中心的震击判定范围'],
+                ['stone_melee_damage_scale','坚守近战倍率',.05,5,.05,'倍','每次近战震击相对当前普攻伤害的倍率'],
+                ['katana_cooldown','太刀挥斩间隔',.2,5,.05,'秒','自动索敌或按空格手动挥斩后的攻速限制'],
+                ['katana_active','太刀反弹窗口',.05,1,.01,'秒','挥斩期间可反弹敌方弹幕的时间'],
+                ['katana_range','太刀攻击距离',30,500,5,'像素','自动索敌、挥斩命中与弹幕反射的基础距离'],
+                ['katana_arc_deg','太刀挥斩角度',30,300,5,'度','面向方向的扇形攻击范围'],
+                ['katana_damage_scale','太刀伤害倍率',.1,10,.05,'倍','相对当前普攻单发伤害的倍率'],
+                ['katana_range_per_level','太刀每级距离成长',0,30,.1,'像素/级','升级时自动延伸的太刀攻击距离，无成长上限'],
+                ['katana_knockback','太刀普通击退',0,240,2,'像素','未斩杀普通敌人时将其推离冒险者的距离'],
+                ['katana_boss_knockback','太刀首领击退',0,120,2,'像素','未斩杀首领时的击退距离，体现首领抗性'],
+                ['katana_hit_stun','太刀命中硬直',0,2,.02,'秒','未斩杀敌人被击退后的短暂减速硬直'],
+                ['cover_projectile_life','Q 掩体弹持续时间',2,120,1,'秒','追踪掩体弹的基础存在时间'],
+                ['cover_projectile_bounces','Q 掩体弹弹射次数',1,40,1,'次','碰撞边界或中央铁墙后可继续存在的次数'],
+                ['cover_projectile_blocks','Q 掩体弹拦截量',1,100,1,'发','拦截多少枚敌弹后失去掩体能力，但弹体仍继续追击'],
+                ['skill_cooldown_scale','主动技能冷却倍率',.25,5,.05,'倍','所有主动技能冷却统一乘以此值'],
+                ['skill_power_growth','技能等级成长',0,.5,.005,'系数','主动技能随等级增长的幅度'],
+                ['boss_form_radial_count','化身环形弹幕量',6,60,1,'发','星骸化身每次空格攻击向四周发射的弹幕数量'],
+                ['boss_form_radial_damage_scale','化身环弹伤害',.05,5,.05,'倍','每枚环形弹相对当前普攻伤害的倍率'],
+                ['boss_form_aimed_damage_scale','化身锁敌弹伤害',.05,5,.05,'倍','每枚朝目标发射的集中弹幕伤害倍率'],
+                ['boss_form_fire_interval','化身射击间隔',.12,3,.02,'秒','星骸化身连续按空格倾泻弹幕的最短间隔'],
+                ['boss_form_impact_radius','化身震荡半径',50,500,5,'像素','变身期间周期性近身震荡的覆盖范围'],
+                ['boss_form_impact_damage_scale','化身震荡伤害',.05,5,.05,'倍','每次近身震荡相对当前普攻伤害的倍率'],
+                ['boss_form_impact_interval','化身震荡间隔',.15,4,.05,'秒','变身期间两次自动近身震荡之间的时间'],
+                ['blowdart_chant','吹箭兵吟唱',.1,5,.05,'秒','吹箭兵射击前的警示时间'],
+                ['blowdart_projectiles','吹箭弹幕数量',1,30,1,'发','一次吹箭攻击发射的弹丸数'],
+                ['blowdart_slow_duration','吹箭减速时间',0,12,.05,'秒','命中玩家后的减速持续时间'],
+                ['dracula_first_time','血月首次降临',10,1800,5,'秒','开局后德古拉首次进入战场的时间'],
+                ['dracula_spawn_interval','血月再临间隔',20,3600,5,'秒','德古拉事件之间的基础间隔'],
+                ['dracula_hp','德古拉生命',2,10000,1,'点','德古拉每次出现时的生命值'],
+                ['dracula_speed','德古拉移速',20,500,5,'像素/秒','移动与躲避子弹的基础速度'],
+                ['dracula_bat_cooldown','蝙蝠召唤间隔',2,120,.5,'秒','德古拉每次放出蝙蝠的间隔'],
+                ['dracula_bat_count','蝙蝠召唤数量',1,12,1,'只','每轮索敌冲刺的蝙蝠数量'],
+                ['dracula_bat_speed','蝙蝠冲刺速度',80,1200,10,'像素/秒','显示轨迹后的冲刺速度'],
+                ['dracula_bat_damage','蝙蝠伤害',.1,100,.1,'点','索敌蝙蝠撞击玩家的伤害'],
+                ['dracula_blink_cooldown','德古拉位移间隔',1.5,60,.1,'秒','血雾位移的基础冷却'],
+                ['dracula_barrage_cooldown','德古拉弹幕间隔',.5,60,.1,'秒','扇形与环形弹幕的基础冷却'],
+                ['dracula_barrage_count','德古拉扇形弹量',1,60,1,'发','扇形弹幕的基础弹丸数量'],
+                ['dracula_bullet_speed','德古拉弹速',50,1500,10,'像素/秒','德古拉紫红弹幕的基础速度'],
+                ['dracula_bullet_damage','德古拉弹幕伤害',.05,100,.05,'点','每枚扇形弹丸的基础伤害'],
+                ['dracula_group_start_level','多德古拉起始等级',2,200,1,'级','达到该等级后德古拉会成组同时出现'],
+                ['dracula_group_level_interval','德古拉数量成长间隔',1,200,1,'级','此后每隔多少级增加一只同场德古拉'],
+                ['dracula_tier_hp_growth','德古拉阶位生命成长',0,5,.05,'倍率/轮','每次血月回归增加的德古拉生命倍率'],
+                ['dracula_ninja_count','忍者仆从数量',0,20,1,'名','每场首领房由德古拉带来的厚血精英忍者'],
+                ['dracula_ninja_hp_scale','忍者仆从生命倍率',.5,20,.1,'倍','仆从相对同级普通精英忍者的额外生命倍率'],
+                ['dracula_heal_cooldown','血潮治疗间隔',2,60,.1,'秒','德古拉两次范围治疗之间的基础间隔'],
+                ['dracula_heal_radius','血潮治疗半径',80,800,5,'像素','德古拉治疗周围受伤敌军的范围'],
+                ['dracula_heal_percent','血潮治疗比例',0,.3,.1,'%','每次恢复目标最大生命的比例，并受单次治疗上限约束',true],
+                ['dracula_blood_bomb_cooldown','血炸弹间隔',1,60,.1,'秒','无前摇血炸弹从玩家上方落下的基础间隔'],
+                ['dracula_blood_bomb_damage','血炸弹伤害',.1,100,.1,'点','不可格挡且破甲的血炸弹基础伤害'],
+                ['dracula_blood_bomb_lifesteal','血炸弹吸血比例',0,3,.05,'倍','按玩家实际生命损失治疗德古拉的比例'],
+                ['dracula_lifesteal_gain','传承吸血增量',0,1,.001,'比例/阶','每次击杀德古拉后，基础攻击永久增加的伤害吸血比例'],
+                ['dracula_bat_chance_gain','传承蝙蝠概率增量',0,1,.01,'概率/阶','每阶传承独立叠加的吸血蝙蝠触发概率'],
+                ['dracula_bat_internal_cooldown','传承蝙蝠内置冷却',.05,30,.05,'秒','连续触发玩家侧吸血蝙蝠的最短间隔'],
+                ['dracula_legacy_bat_damage_scale','传承蝙蝠伤害倍率',.05,20,.05,'倍','吸血蝙蝠相对当前基础攻击的伤害倍率'],
+                ['dracula_legacy_bat_lifesteal','传承蝙蝠吸血',0,1,.01,'比例','吸血蝙蝠造成伤害时额外恢复的生命比例'],
+                ['laser_lifesteal_scale','激光吸血效率',0,1,.05,'倍','激光命中怪群时对传承吸血的结算效率，避免一束回满'],
+                ['tamed_bat_duration','护卫蝙蝠时长',1,120,1,'秒','完美格挡收服后的守护时间']
+            ]}
+        ];
+
+        async function copyText(value) {
+            if (!value) throw new Error('没有可复制的内容');
+            const text = String(value);
+            try {
+                if (navigator.clipboard?.writeText) {
+                    await navigator.clipboard.writeText(text);
+                    return;
+                }
+            } catch (_) {
+                // 部分浏览器会拒绝后台页面或非安全上下文访问剪贴板，继续使用兼容方案。
+            }
+
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.setAttribute('readonly', '');
+            textarea.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0;pointer-events:none';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            textarea.setSelectionRange(0, text.length);
+            let copied = false;
+            try {
+                copied = document.execCommand('copy');
+            } catch (_) {
+                copied = false;
+            } finally {
+                textarea.remove();
+            }
+            if (!copied) throw new Error('复制失败，请手动复制');
+        }
+
+        function showToast(message, isError = false) {
+            toast.textContent = message;
+            toast.className = `toast show${isError ? ' error' : ''}`;
+            window.clearTimeout(showToast.timer);
+            showToast.timer = window.setTimeout(() => toast.className = 'toast', 2600);
+        }
+
+        async function api(url, options = {}) {
+            const response = await fetch(url, {
+                ...options,
+                headers: {'Content-Type': 'application/json', ...(options.headers || {})}
+            });
+            const data = await response.json().catch(() => ({}));
+            if (response.status === 401) {
+                window.location.replace('/login');
+                throw new Error('登录已失效');
+            }
+            if (!response.ok) throw new Error(data.error || '请求失败');
+            return data;
+        }
+
+        function renderUsers(users) {
+            userCount.textContent = `${users.length} 个账号`;
+            if (!users.length) {
+                userList.innerHTML = '<div class="empty">还没有账号</div>';
+                return;
+            }
+            userList.innerHTML = users.map(user => {
+                const isAdmin = user.role === 'admin';
+                const statusButton = isAdmin ? '' : `<button class="${user.enabled ? 'danger-button' : 'solid-button'}" data-action="status" data-user="${escapeHtml(user.username)}" data-enabled="${!user.enabled}">${user.enabled ? '停用' : '启用'}</button>`;
+                return `
+                    <article class="user-row">
+                        <div class="identity">
+                            <div class="username"><span class="state-dot ${user.enabled ? '' : 'off'}"></span><span class="username-text">${escapeHtml(user.username)}</span>${isAdmin ? '<span class="role">管理员</span>' : ''}</div>
+                            <div class="meta">${user.enabled ? '可登录' : '已停用'} · ${formatDate(user.last_login_at)}</div>
+                        </div>
+                        <div class="metric runs"><strong>${user.runs}</strong><span>完成局数</span></div>
+                        <div class="metric"><strong>${user.best_score}</strong><span>最高分</span></div>
+                        <div class="row-actions">
+                            <button class="ghost-button" data-action="reset" data-user="${escapeHtml(user.username)}">重置密码</button>
+                            ${statusButton}
+                        </div>
+                    </article>`;
+            }).join('');
+        }
+
+        function renderInvites(codes) {
+            if (!codes.length) {
+                inviteList.innerHTML = '<div class="empty">尚未生成注册码</div>';
+                return;
+            }
+            inviteList.innerHTML = codes.map(invite => {
+                const uses = Number(invite.uses) || 0;
+                const hasLimit = Number.isInteger(invite.max_uses);
+                const maxUses = hasLimit ? invite.max_uses : null;
+                const exhausted = hasLimit && uses >= maxUses;
+                const stateText = !invite.enabled ? '已停用' : exhausted ? '已用完' : '已启用';
+                const stateClass = !invite.enabled ? 'off' : exhausted ? 'full' : '';
+                const usageText = hasLimit
+                    ? `已注册 ${uses} / ${maxUses} 个账号 · 剩余 ${Math.max(0, maxUses - uses)} 次`
+                    : `已注册 ${uses} 个账号 · 当前未设置上限（历史码）`;
+                const suggestedLimit = hasLimit ? maxUses : Math.max(5, uses);
+                return `
+                <article class="invite-row" data-invite-code="${escapeHtml(invite.code)}">
+                    <div class="invite-code"><strong>${escapeHtml(invite.code)}</strong><span class="invite-state ${stateClass}">${stateText}</span></div>
+                    <div class="invite-meta">${usageText}${invite.last_username ? ` · 最近：${escapeHtml(invite.last_username)}` : ''}</div>
+                    <div class="invite-limit-control">
+                        <label>使用上限
+                            <input class="invite-limit-input" type="number" min="1" max="1000000" step="1" value="${suggestedLimit}" inputmode="numeric" aria-label="${escapeHtml(invite.code)} 的使用上限">
+                        </label>
+                        <button class="ghost-button" data-code-action="limit" data-code="${escapeHtml(invite.code)}">保存上限</button>
+                    </div>
+                    <div class="invite-actions">
+                        <button class="ghost-button" data-code-action="copy" data-code="${escapeHtml(invite.code)}">复制注册码</button>
+                        <button class="${invite.enabled ? 'danger-button' : 'solid-button'}" data-code-action="status" data-code="${escapeHtml(invite.code)}" data-enabled="${!invite.enabled}">${invite.enabled ? '停用' : '启用'}</button>
+                    </div>
+                </article>`;
+            }).join('');
+        }
+
+        function allConfigFields() {
+            return configSections.flatMap(section => section.fields);
+        }
+
+        function displayConfigValue(value, percent) {
+            const scaled = Number(value) * (percent ? 100 : 1);
+            return Math.round(scaled * 1_000_000) / 1_000_000;
+        }
+
+        function renderGameConfig(data) {
+            const config = data.config || {};
+            configGroups.innerHTML = configSections.map((section, index) => `
+                <details class="config-group" data-tone="${section.tone}" ${index === 0 ? 'open' : ''}>
+                    <summary>${escapeHtml(section.title)}<span class="count">${section.fields.length} 项</span></summary>
+                    <div class="config-grid">
+                        ${section.fields.map(([key, label, min, max, step, unit, help, percent]) => `
+                            <label class="config-field" for="cfg_${key}">
+                                <span><b>${escapeHtml(label)}</b><em>${escapeHtml(unit)}</em></span>
+                                <input id="cfg_${key}" name="${key}" type="number"
+                                    min="${percent ? min * 100 : min}" max="${percent ? max * 100 : max}" step="${step}"
+                                    value="${displayConfigValue(config[key], percent)}" data-percent="${percent ? 'true' : 'false'}" required>
+                                <small>${escapeHtml(help)}</small>
+                            </label>`).join('')}
+                    </div>
+                </details>`).join('');
+            configState.textContent = data.updated_at
+                ? `${formatDate(data.updated_at)} · ${data.updated_by || '管理员'} 更新`
+                : '当前使用系统默认参数';
+        }
+
+        function collectGameConfig() {
+            if (!gameConfigForm.checkValidity()) {
+                gameConfigForm.reportValidity();
+                return null;
+            }
+            return Object.fromEntries(allConfigFields().map(([key]) => {
+                const input = document.getElementById(`cfg_${key}`);
+                const scale = input.dataset.percent === 'true' ? 100 : 1;
+                return [key, input.valueAsNumber / scale];
+            }));
+        }
+
+        async function loadDashboard() {
+            try {
+                const [{users}, {codes}, me, gameConfig] = await Promise.all([
+                    api('/api/admin/users'),
+                    api('/api/admin/invite-codes'),
+                    api('/api/me'),
+                    api('/api/admin/game-config')
+                ]);
+                document.getElementById('adminIdentity').textContent = `${me.username} · 管理员`;
+                renderUsers(users);
+                renderInvites(codes);
+                renderGameConfig(gameConfig);
+            } catch (error) {
+                userList.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
+                inviteList.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
+                configGroups.innerHTML = `<div class="empty">${escapeHtml(error.message)}</div>`;
+                configState.textContent = '参数读取失败';
+            }
+        }
+
+        document.querySelectorAll('[data-generate]').forEach(button => button.addEventListener('click', async () => {
+            button.disabled = true;
+            try {
+                const result = await api('/api/admin/generate-credentials', {
+                    method: 'POST',
+                    body: JSON.stringify({fields: button.dataset.generate})
+                });
+                if (result.username) document.getElementById('newUsername').value = result.username;
+                if (result.password) document.getElementById('newPassword').value = result.password;
+                createMessage.textContent = '已安全生成，请确认后创建账号';
+                createMessage.className = 'form-message success';
+            } catch (error) {
+                showToast(error.message, true);
+            } finally {
+                button.disabled = false;
+            }
+        }));
+
+        document.getElementById('copyCredentials').addEventListener('click', async () => {
+            const username = document.getElementById('newUsername').value.trim();
+            const password = document.getElementById('newPassword').value;
+            try {
+                await copyText(`账号：${username}\n密码：${password}`);
+                showToast('账号和密码已复制');
+            } catch (error) { showToast(error.message, true); }
+        });
+
+        document.getElementById('generateInvite').addEventListener('click', async event => {
+            const button = event.currentTarget;
+            const maxUsesInput = document.getElementById('inviteMaxUses');
+            if (!maxUsesInput.checkValidity()) {
+                maxUsesInput.reportValidity();
+                return;
+            }
+            button.disabled = true;
+            try {
+                const maxUses = maxUsesInput.valueAsNumber;
+                const {invite} = await api('/api/admin/invite-codes', {
+                    method:'POST',
+                    body:JSON.stringify({max_uses: maxUses})
+                });
+                await loadDashboard();
+                await copyText(invite.code);
+                showToast(`新注册码已生成，可注册 ${maxUses} 个账号`);
+            } catch (error) {
+                showToast(error.message, true);
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        inviteList.addEventListener('click', async event => {
+            const button = event.target.closest('button[data-code-action]');
+            if (!button) return;
+            if (button.dataset.codeAction === 'copy') {
+                try { await copyText(button.dataset.code); showToast('注册码已复制'); }
+                catch (error) { showToast(error.message, true); }
+                return;
+            }
+            if (button.dataset.codeAction === 'limit') {
+                const input = button.closest('.invite-row').querySelector('.invite-limit-input');
+                if (!input.checkValidity()) {
+                    input.reportValidity();
+                    return;
+                }
+                button.disabled = true;
+                try {
+                    await api(`/api/admin/invite-codes/${encodeURIComponent(button.dataset.code)}`, {
+                        method:'PATCH',
+                        body:JSON.stringify({max_uses: input.valueAsNumber})
+                    });
+                    showToast(`使用上限已调整为 ${input.valueAsNumber} 次`);
+                    await loadDashboard();
+                } catch (error) { showToast(error.message, true); button.disabled = false; }
+                return;
+            }
+            button.disabled = true;
+            try {
+                await api(`/api/admin/invite-codes/${encodeURIComponent(button.dataset.code)}`, {
+                    method:'PATCH',
+                    body:JSON.stringify({enabled: button.dataset.enabled === 'true'})
+                });
+                showToast('注册码状态已更新');
+                await loadDashboard();
+            } catch (error) { showToast(error.message, true); button.disabled = false; }
+        });
+
+        createForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            const submit = createForm.querySelector('button[type="submit"]');
+            createMessage.textContent = '';
+            createMessage.className = 'form-message';
+            submit.disabled = true;
+            try {
+                await api('/api/admin/users', {
+                    method: 'POST',
+                    body: JSON.stringify({username: createForm.username.value.trim(), password: createForm.password.value})
+                });
+                createMessage.textContent = `已创建 ${createForm.username.value.trim()}，请复制凭证后交给玩家`;
+                createMessage.className = 'form-message success';
+                await loadDashboard();
+            } catch (error) {
+                createMessage.textContent = error.message;
+            } finally {
+                submit.disabled = false;
+            }
+        });
+
+        userList.addEventListener('click', async event => {
+            const button = event.target.closest('button[data-action]');
+            if (!button) return;
+            const username = button.dataset.user;
+            if (button.dataset.action === 'reset') {
+                document.getElementById('resetUsername').value = username;
+                document.getElementById('resetUsernameLabel').textContent = username;
+                document.getElementById('resetPassword').value = '';
+                document.getElementById('resetError').textContent = '';
+                resetDialog.showModal();
+                document.getElementById('resetPassword').focus();
+                return;
+            }
+            button.disabled = true;
+            try {
+                await api(`/api/admin/users/${encodeURIComponent(username)}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({enabled: button.dataset.enabled === 'true'})
+                });
+                showToast(`已更新 ${username} 的登录状态`);
+                await loadDashboard();
+            } catch (error) {
+                showToast(error.message, true);
+                button.disabled = false;
+            }
+        });
+
+        resetForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            const username = document.getElementById('resetUsername').value;
+            const password = document.getElementById('resetPassword').value;
+            const submit = resetForm.querySelector('button[type="submit"]');
+            submit.disabled = true;
+            try {
+                await api(`/api/admin/users/${encodeURIComponent(username)}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({password})
+                });
+                resetDialog.close();
+                showToast(`已重置 ${username} 的密码`);
+            } catch (error) {
+                document.getElementById('resetError').textContent = error.message;
+            } finally {
+                submit.disabled = false;
+            }
+        });
+
+        gameConfigForm.addEventListener('submit', async event => {
+            event.preventDefault();
+            const config = collectGameConfig();
+            if (!config) return;
+            const submit = gameConfigForm.querySelector('button[type="submit"]');
+            submit.disabled = true;
+            configMessage.textContent = '正在保存参数…';
+            try {
+                const result = await api('/api/admin/game-config', {
+                    method:'PUT',
+                    body:JSON.stringify(config)
+                });
+                renderGameConfig(result);
+                configMessage.textContent = '已保存，新开局自动生效';
+                showToast('游戏参数已保存');
+            } catch (error) {
+                configMessage.textContent = error.message;
+                showToast(error.message, true);
+            } finally {
+                submit.disabled = false;
+            }
+        });
+
+        document.getElementById('resetGameConfig').addEventListener('click', async event => {
+            if (!window.confirm('确定恢复全部默认游戏参数吗？当前自定义数值会被覆盖。')) return;
+            const button = event.currentTarget;
+            button.disabled = true;
+            configMessage.textContent = '正在恢复默认参数…';
+            try {
+                const result = await api('/api/admin/game-config/reset', {method:'POST', body:'{}'});
+                renderGameConfig(result);
+                configMessage.textContent = '已恢复默认参数，新开局自动生效';
+                showToast('已恢复默认游戏参数');
+            } catch (error) {
+                configMessage.textContent = error.message;
+                showToast(error.message, true);
+            } finally {
+                button.disabled = false;
+            }
+        });
+
+        document.getElementById('cancelReset').addEventListener('click', () => resetDialog.close());
+        document.getElementById('logoutButton').addEventListener('click', async () => {
+            await fetch('/api/logout', {method: 'POST'});
+            window.location.replace('/login');
+        });
+
+        loadDashboard();
+    </script>
+</body>
+</html>

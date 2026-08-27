@@ -1,0 +1,40 @@
+name: rogue-arena
+
+services:
+  rogue-arena:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: rogue-arena:local
+    container_name: rogue-arena
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      PORT: 18088
+      DATA_DIR: /data
+      SESSION_SECRET: ${SESSION_SECRET:?请在 .env 中设置 SESSION_SECRET}
+      COOKIE_SECURE: ${COOKIE_SECURE:-0}
+      TRUST_PROXY: ${TRUST_PROXY:-0}
+      VILLAGER_API_BASE: ${VILLAGER_API_BASE:-}
+      VILLAGER_API_KEY: ${VILLAGER_API_KEY:-}
+      VILLAGER_MODEL: ${VILLAGER_MODEL:-}
+      VILLAGER_TIMEOUT: ${VILLAGER_TIMEOUT:-28}
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${HOST_PORT:-18088}:18088"
+    volumes:
+      - ./data:/data
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 256m
+    cpus: 0.50
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"

@@ -1,0 +1,448 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>几何围猎 · 登录</title>
+    <style>
+        :root {
+            color-scheme: light;
+            --ink: #10221c;
+            --muted: #51685f;
+            --paper: #edf8f1;
+            --panel: rgba(249, 255, 251, .84);
+            --jade: #2b8a62;
+            --jade-dark: #176144;
+            --mint: #8ee0b7;
+            --amber: #e8a83e;
+            --danger: #b54343;
+            --line: rgba(32, 93, 68, .18);
+            --shadow: 0 28px 80px rgba(32, 79, 60, .18);
+        }
+
+        * { box-sizing: border-box; }
+
+        html, body { min-height: 100%; }
+
+        body {
+            margin: 0;
+            color: var(--ink);
+            background:
+                radial-gradient(circle at 12% 18%, rgba(142, 224, 183, .44), transparent 31rem),
+                radial-gradient(circle at 88% 84%, rgba(232, 168, 62, .16), transparent 25rem),
+                var(--paper);
+            font-family: "Segoe UI Variable", "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: .5;
+            background-image:
+                linear-gradient(var(--line) 1px, transparent 1px),
+                linear-gradient(90deg, var(--line) 1px, transparent 1px);
+            background-size: 44px 44px;
+            mask-image: linear-gradient(to bottom, black, transparent 90%);
+        }
+
+        .shell {
+            position: relative;
+            min-height: 100vh;
+            display: grid;
+            grid-template-columns: minmax(0, 1.15fr) minmax(340px, .85fr);
+            align-items: stretch;
+        }
+
+        .story {
+            min-height: 100vh;
+            padding: clamp(36px, 6vw, 92px);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font: 700 14px/1 "Consolas", "Microsoft YaHei UI", monospace;
+            letter-spacing: .12em;
+        }
+
+        .brand-mark {
+            width: 34px;
+            aspect-ratio: 1;
+            display: grid;
+            place-items: center;
+            color: white;
+            background: var(--jade-dark);
+            clip-path: polygon(50% 0, 95% 35%, 78% 92%, 22% 92%, 5% 35%);
+        }
+
+        .hero { max-width: 720px; margin: 54px 0; }
+
+        .eyebrow {
+            margin: 0 0 18px;
+            color: var(--jade-dark);
+            font: 700 13px/1.4 "Consolas", monospace;
+            letter-spacing: .18em;
+            text-transform: uppercase;
+        }
+
+        h1 {
+            margin: 0;
+            max-width: 8em;
+            font-family: "YouYuan", "Microsoft YaHei UI", sans-serif;
+            font-size: clamp(52px, 8vw, 118px);
+            line-height: .93;
+            letter-spacing: -.07em;
+            text-wrap: balance;
+        }
+
+        h1 span { color: var(--jade); }
+
+        .hero-copy {
+            max-width: 560px;
+            margin: 28px 0 0;
+            color: var(--muted);
+            font-size: clamp(16px, 1.5vw, 20px);
+            line-height: 1.8;
+        }
+
+        .status-strip {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 28px;
+            padding-top: 22px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 13px;
+        }
+
+        .status-strip span::before {
+            content: "";
+            display: inline-block;
+            width: 7px;
+            height: 7px;
+            margin-right: 9px;
+            border-radius: 99px;
+            background: var(--jade);
+            box-shadow: 0 0 0 4px rgba(43, 138, 98, .12);
+        }
+
+        .gate {
+            position: relative;
+            display: grid;
+            place-items: center;
+            padding: 28px clamp(24px, 5vw, 72px);
+            background: rgba(207, 238, 220, .48);
+            border-left: 1px solid rgba(23, 97, 68, .12);
+            backdrop-filter: blur(20px);
+        }
+
+        .radar {
+            position: absolute;
+            width: min(42vw, 620px);
+            aspect-ratio: 1;
+            border: 1px solid rgba(43, 138, 98, .18);
+            border-radius: 50%;
+            opacity: .7;
+        }
+
+        .radar::before, .radar::after {
+            content: "";
+            position: absolute;
+            border: 1px solid rgba(43, 138, 98, .18);
+            border-radius: 50%;
+            inset: 18%;
+        }
+
+        .radar::after { inset: 36%; }
+
+        .radar-sweep {
+            position: absolute;
+            inset: 50% 0 0 50%;
+            transform-origin: 0 0;
+            background: conic-gradient(from 270deg, rgba(43, 138, 98, .28), transparent 23%);
+            animation: sweep 7s linear infinite;
+        }
+
+        .login-card {
+            position: relative;
+            z-index: 1;
+            width: min(100%, 480px);
+            padding: clamp(28px, 4vw, 48px);
+            background: var(--panel);
+            border: 1px solid rgba(255, 255, 255, .9);
+            border-radius: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .card-kicker {
+            margin: 0 0 8px;
+            color: var(--jade-dark);
+            font: 700 12px/1.4 "Consolas", monospace;
+            letter-spacing: .16em;
+        }
+
+        h2 { margin: 0; font-size: 30px; letter-spacing: -.04em; }
+
+        .card-copy { margin: 10px 0 28px; color: var(--muted); line-height: 1.6; }
+
+        .auth-tabs {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px;
+            margin: 22px 0 4px;
+            padding: 5px;
+            background: rgba(43, 138, 98, .08);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+        }
+        .auth-tabs button {
+            margin: 0;
+            padding: 11px 12px;
+            color: var(--muted);
+            background: transparent;
+            border-radius: 10px;
+            box-shadow: none;
+            font-size: 14px;
+        }
+        .auth-tabs button.active { color: white; background: var(--jade-dark); box-shadow: 0 8px 18px rgba(23, 97, 68, .18); }
+        .auth-panel[hidden] { display: none; }
+        .auth-panel .card-copy { margin-bottom: 8px; font-size: 14px; }
+
+        label { display: block; margin-top: 18px; font-weight: 700; font-size: 14px; }
+
+        input {
+            width: 100%;
+            margin-top: 8px;
+            padding: 14px 16px;
+            color: var(--ink);
+            background: rgba(255, 255, 255, .88);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            outline: none;
+            font: inherit;
+            transition: border-color .2s, box-shadow .2s, transform .2s;
+        }
+
+        input:focus {
+            border-color: var(--jade);
+            box-shadow: 0 0 0 4px rgba(43, 138, 98, .13);
+            transform: translateY(-1px);
+        }
+
+        button {
+            width: 100%;
+            margin-top: 24px;
+            padding: 15px 18px;
+            color: white;
+            background: var(--jade-dark);
+            border: 0;
+            border-radius: 14px;
+            box-shadow: 0 12px 26px rgba(23, 97, 68, .24);
+            cursor: pointer;
+            font: 800 16px/1 "Segoe UI Variable", "Microsoft YaHei UI", sans-serif;
+            transition: transform .2s, background .2s, box-shadow .2s;
+        }
+
+        button:hover { background: var(--jade); transform: translateY(-2px); }
+        button:active { transform: translateY(0); }
+        button:focus-visible { outline: 3px solid var(--amber); outline-offset: 3px; }
+        button:disabled { opacity: .65; cursor: wait; transform: none; }
+
+        .error {
+            min-height: 24px;
+            margin: 14px 0 -4px;
+            color: var(--danger);
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .access-note {
+            display: flex;
+            gap: 10px;
+            margin-top: 24px;
+            padding-top: 20px;
+            border-top: 1px solid var(--line);
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.55;
+        }
+
+        .lock {
+            flex: 0 0 auto;
+            width: 22px;
+            height: 22px;
+            display: grid;
+            place-items: center;
+            color: var(--jade-dark);
+            background: rgba(142, 224, 183, .3);
+            border-radius: 7px;
+            font-size: 12px;
+        }
+
+        @keyframes sweep { to { transform: rotate(360deg); } }
+
+        @media (max-width: 860px) {
+            .shell { grid-template-columns: 1fr; }
+            .story { min-height: auto; padding: 32px 24px 22px; }
+            .hero { margin: 70px 0 36px; }
+            h1 { max-width: 9em; font-size: clamp(54px, 16vw, 92px); }
+            .status-strip { display: none; }
+            .gate { min-height: 52vh; border: 0; padding: 28px 20px 52px; }
+            .radar { width: 88vw; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; scroll-behavior: auto !important; }
+        }
+    </style>
+</head>
+<body>
+    <main class="shell">
+        <section class="story" aria-labelledby="pageTitle">
+            <div class="brand"><span class="brand-mark">几</span> 几何围猎 · 英雄地下城</div>
+            <div class="hero">
+                <p class="eyebrow">肉鸽地下城远征</p>
+                <h1 id="pageTitle">几何<span>围猎</span></h1>
+                <p class="hero-copy">每一次升级都会改变这次远征的战斗方式。带上护符、武器与器灵，在不断异变的地下城中活下去。</p>
+            </div>
+            <div class="status-strip" aria-label="系统状态">
+                <span>管理员账号与注册码</span>
+                <span>服务端会话保护</span>
+                <span>全服最高分竞技榜</span>
+            </div>
+        </section>
+
+        <section class="gate" aria-label="登录区">
+            <div class="radar" aria-hidden="true"><div class="radar-sweep"></div></div>
+            <div class="login-card">
+                <p class="card-kicker">远征者身份验证</p>
+                <h2>进入远征营地</h2>
+                <p class="card-copy">使用已有账号登录，或使用管理员发放的注册码创建账号。</p>
+
+                <div class="auth-tabs" role="tablist" aria-label="登录与注册">
+                    <button type="button" class="active" id="loginTab" role="tab" aria-selected="true" aria-controls="loginForm">账号登录</button>
+                    <button type="button" id="registerTab" role="tab" aria-selected="false" aria-controls="registerForm">注册码注册</button>
+                </div>
+
+                <form class="auth-panel" id="loginForm" role="tabpanel" aria-labelledby="loginTab">
+                    <label for="username">账号</label>
+                    <input id="username" name="username" autocomplete="username" required maxlength="24" autofocus>
+
+                    <label for="password">密码</label>
+                    <input id="password" name="password" type="password" autocomplete="current-password" required maxlength="128">
+
+                    <p class="error" id="loginError" role="alert" aria-live="polite"></p>
+                    <button type="submit" id="loginButton">验证并进入</button>
+                </form>
+
+                <form class="auth-panel" id="registerForm" role="tabpanel" aria-labelledby="registerTab" hidden>
+                    <label for="inviteCode">注册码</label>
+                    <input id="inviteCode" name="invite_code" autocomplete="one-time-code" required maxlength="14" placeholder="例如：ABCD-EFGH-JKLM">
+
+                    <label for="registerUsername">自选账号</label>
+                    <input id="registerUsername" name="username" autocomplete="username" required minlength="2" maxlength="24" placeholder="2–24 位中文、字母或数字">
+
+                    <label for="registerPassword">自选密码</label>
+                    <input id="registerPassword" name="password" type="password" autocomplete="new-password" required minlength="8" maxlength="128" placeholder="至少 8 位">
+
+                    <label for="confirmPassword">确认密码</label>
+                    <input id="confirmPassword" name="confirm_password" type="password" autocomplete="new-password" required minlength="8" maxlength="128">
+
+                    <p class="error" id="registerError" role="alert" aria-live="polite"></p>
+                    <button type="submit" id="registerButton">注册并进入</button>
+                </form>
+
+                <div class="access-note">
+                    <span class="lock">◆</span>
+                    <span>每个注册码的可注册人数由管理员单独设置；达到上限或被停用后将无法继续注册。忘记密码时请联系管理员重置。</span>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        const loginForm = document.getElementById('loginForm');
+        const registerForm = document.getElementById('registerForm');
+        const loginButton = document.getElementById('loginButton');
+        const registerButton = document.getElementById('registerButton');
+        const loginError = document.getElementById('loginError');
+        const registerError = document.getElementById('registerError');
+
+        function setMode(mode) {
+            const isLogin = mode === 'login';
+            loginForm.hidden = !isLogin;
+            registerForm.hidden = isLogin;
+            document.getElementById('loginTab').classList.toggle('active', isLogin);
+            document.getElementById('registerTab').classList.toggle('active', !isLogin);
+            document.getElementById('loginTab').setAttribute('aria-selected', String(isLogin));
+            document.getElementById('registerTab').setAttribute('aria-selected', String(!isLogin));
+            (isLogin ? document.getElementById('username') : document.getElementById('inviteCode')).focus();
+        }
+
+        document.getElementById('loginTab').addEventListener('click', () => setMode('login'));
+        document.getElementById('registerTab').addEventListener('click', () => setMode('register'));
+
+        loginForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            loginError.textContent = '';
+            loginButton.disabled = true;
+            loginButton.textContent = '正在验证…';
+            try {
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        username: loginForm.username.value.trim(),
+                        password: loginForm.password.value
+                    })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || '登录失败');
+                window.location.replace('/');
+            } catch (error) {
+                loginError.textContent = error.message || '网络连接失败，请稍后重试';
+                loginButton.disabled = false;
+                loginButton.textContent = '验证并进入';
+                document.getElementById('password').select();
+            }
+        });
+
+        registerForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            registerError.textContent = '';
+            if (registerForm.password.value !== registerForm.confirm_password.value) {
+                registerError.textContent = '两次输入的密码不一致';
+                document.getElementById('confirmPassword').select();
+                return;
+            }
+            registerButton.disabled = true;
+            registerButton.textContent = '正在创建账号…';
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({
+                        invite_code: registerForm.invite_code.value.trim(),
+                        username: registerForm.username.value.trim(),
+                        password: registerForm.password.value
+                    })
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || '注册失败');
+                window.location.replace('/');
+            } catch (error) {
+                registerError.textContent = error.message || '网络连接失败，请稍后重试';
+                registerButton.disabled = false;
+                registerButton.textContent = '注册并进入';
+            }
+        });
+    </script>
+</body>
+</html>
